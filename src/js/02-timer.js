@@ -1,5 +1,6 @@
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
 const refs = {
   button: document.querySelector('button[data-start]'),
@@ -10,8 +11,9 @@ const refs = {
   seconds: document.querySelector('span[data-seconds]'),
 };
 
+let timeoutId = null;
 refs.button.setAttribute('disabled', true);
-// refs.button.addEventListener('click', onClickStart);
+refs.button.addEventListener('click', onClickStart);
 
 const options = {
   enableTime: true,
@@ -20,34 +22,41 @@ const options = {
   minuteIncrement: 1,
   onClose(selectedDates) {
     console.log(selectedDates[0]);
-    const nowTime = Date.now();
-    console.log(nowTime);
-    if (selectedDates[0] < nowTime) {
-      window.alert('Please choose a date in the future');
-      return;
+    if (selectedDates[0] < Date.now()) {
+      // window.alert('Please choose a date in the future');
+      Notify.failure('Please choose a date in the future');
     } else {
       refs.button.removeAttribute('disabled');
-      setInterval(() => {
-        const nowTime = Date.now();
-        const deltaTime = selectedDates[0] - nowTime;
-        const { days, hours, minutes, seconds } = convertMs(deltaTime);
-        console.log(`${days}:${hours}:${minutes}:${seconds}`);
-      }, 1000);
     }
   },
 };
 
-flatpickr(refs.input, options);
+const flat = flatpickr(refs.input, options);
 
-// function onClickStart() {
-//   setInterval(() => {
-//     const deltaTime = selectedDates[0] - nowTime;
-//     const timeComponents = convertMs(deltaTime);
-//     console.log(timeComponents);
-//   }, 1000);
-// }
+function getSelectedTimes() {
+  return flat.selectedDates[0].getTime();
+}
 
-function pad(value) {
+function onClickStart() {
+  timeoutId = setInterval(() => {
+    refs.button.setAttribute('disabled', true);
+    const deltaTime = getSelectedTimes() - Date.now();
+    const time = convertMs(deltaTime);
+    updateClockface(time);
+    if (deltaTime === 0) {
+      clearInterval(timeoutId);
+    }
+  }, 1000);
+}
+
+function updateClockface({ days, hours, minutes, seconds }) {
+  refs.days.textContent = `${days}`;
+  refs.hours.textContent = `${hours}`;
+  refs.minutes.textContent = `${minutes}`;
+  refs.seconds.textContent = `${seconds}`;
+}
+
+function addLeadingZero(value) {
   return String(value).padStart(2, '0');
 }
 
@@ -59,13 +68,15 @@ function convertMs(ms) {
   const day = hour * 24;
 
   // Remaining days
-  const days = pad(Math.floor(ms / day));
+  const days = addLeadingZero(Math.floor(ms / day));
   // Remaining hours
-  const hours = pad(Math.floor((ms % day) / hour));
+  const hours = addLeadingZero(Math.floor((ms % day) / hour));
   // Remaining minutes
-  const minutes = pad(Math.floor(((ms % day) % hour) / minute));
+  const minutes = addLeadingZero(Math.floor(((ms % day) % hour) / minute));
   // Remaining seconds
-  const seconds = pad(Math.floor((((ms % day) % hour) % minute) / second));
+  const seconds = addLeadingZero(
+    Math.floor((((ms % day) % hour) % minute) / second)
+  );
 
   return { days, hours, minutes, seconds };
 }
