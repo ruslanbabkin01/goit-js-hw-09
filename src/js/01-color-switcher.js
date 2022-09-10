@@ -19,7 +19,7 @@ const refs = {
 let timerId = null;
 
 refs.startBtn.addEventListener('click', () => {
-  refs.startBtn.setAttribute('disabled', 'disabled');
+  refs.startBtn.setAttribute('disabled', true);
   timerId = setInterval(() => {
     console.log('GO');
     document.body.style.backgroundColor = getRandomHexColor();
