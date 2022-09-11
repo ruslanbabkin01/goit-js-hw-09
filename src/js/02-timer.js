@@ -23,7 +23,6 @@ const options = {
   onClose(selectedDates) {
     console.log(selectedDates[0]);
     if (selectedDates[0] < Date.now()) {
-      // window.alert('Please choose a date in the future');
       Notify.failure('Please choose a date in the future');
     } else {
       refs.button.removeAttribute('disabled');
@@ -38,13 +37,16 @@ function getSelectedTimes() {
 }
 
 function onClickStart() {
+  refs.button.setAttribute('disabled', true);
+  refs.input.setAttribute('disabled', true);
   timeoutId = setInterval(() => {
-    refs.button.setAttribute('disabled', true);
     const deltaTime = getSelectedTimes() - Date.now();
     const time = convertMs(deltaTime);
     updateClockface(time);
-    if (deltaTime === 0) {
+    if (deltaTime < 1000 || deltaTime === 1000) {
       clearInterval(timeoutId);
+      refs.button.removeAttribute('disabled');
+      refs.input.removeAttribute('disabled');
     }
   }, 1000);
 }
